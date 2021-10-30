@@ -80,7 +80,7 @@ local quest = {
 				table.insert(mob_list, 'npc_poisonzombie')
 			end
 
-			if math.random(0, 10) == 0 then
+			if math.random(0, 10) == 0 and not table.HasValueBySeq(mob_list, 'npc_antlionguard') then
 				table.insert(mob_list, 'npc_antlionguard')
 			end
 
@@ -247,7 +247,7 @@ local quest = {
 					eQuest:QuestFunction('f_spawn_zombie_points', eQuest, positions, 10, 10)
 				end,
 			},
-			onQuestNPCKilled = function(eQuest, data, npc, attacker, inflictor)
+			onQuestNPCKilled = function(eQuest, data, attacker, inflictor)
 				eQuest:QuestFunction('f_next_step', eQuest, data, 'delay_spawn_mobs_wave_2')
 			end,
 			think = function(eQuest)
@@ -306,7 +306,7 @@ local quest = {
 					eQuest:QuestFunction('f_spawn_zombie_points', eQuest, positions, 15, 40)
 				end,
 			},
-			onQuestNPCKilled = function(eQuest, data, npc, attacker, inflictor)
+			onQuestNPCKilled = function(eQuest, data, attacker, inflictor)
 				eQuest:QuestFunction('f_next_step', eQuest, data, 'delay_spawn_mobs_wave_3')
 			end,
 			think = function(eQuest)
@@ -351,7 +351,7 @@ local quest = {
 					eQuest:QuestFunction('f_spawn_zombie_points', eQuest, positions, 20, 50)
 				end,
 			},
-			onQuestNPCKilled = function(eQuest, data, npc, attacker, inflictor)
+			onQuestNPCKilled = function(eQuest, data, attacker, inflictor)
 				eQuest:QuestFunction('f_next_step', eQuest, data, 'complete')
 			end,
 			think = function(eQuest)

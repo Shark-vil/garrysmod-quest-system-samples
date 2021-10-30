@@ -77,10 +77,10 @@ local quest = {
 						lang['spawn_dealer_name'], lang['spawn_dealer_text'], 6)
 				end,
 			},
-			onQuestNPCKilled = function(eQuest, data, npc, attacker, inflictor)
+			onQuestNPCKilled = function(eQuest, data, attacker, inflictor)
 				if CLIENT then return end
 
-				if not eQuest:QuestNPCIsValid('enemy') then
+				if not eQuest:QuestNPCIsAlive('enemy') then
 					if eQuest:GetPlayer() == attacker then
 						if not eQuest:IsQuestWeapon(attacker:GetActiveWeapon()) then
 							local player_language = eQuest:GetPlayer():slibLanguage(language_data)

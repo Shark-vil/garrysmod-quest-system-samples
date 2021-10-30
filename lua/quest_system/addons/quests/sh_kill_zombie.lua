@@ -61,8 +61,8 @@ local quest = {
 					end
 				end,
 			},
-			onQuestNPCKilled = function(eQuest, data, npc, attacker, inflictor)
-				if CLIENT or not eQuest:QuestNPCIsValid('enemy') then return end
+			onQuestNPCKilled = function(eQuest, data, attacker, inflictor)
+				if CLIENT or eQuest:QuestNPCIsAlive('enemy') then return end
 				eQuest:NextStep('complete')
 			end
 		},

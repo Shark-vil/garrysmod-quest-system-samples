@@ -33,6 +33,10 @@ local language_data = {
 
 local lang = slib.language(language_data)
 
+local _customer_spawner = function(eQuest, positions)
+	eQuest:QuestFunction('f_spawn_customer', eQuest, table.Random(positions))
+end
+
 local quest = {
 	id = 'search_box',
 	title = lang['title'],
@@ -50,11 +54,11 @@ local quest = {
 			eQuest:NextStep('safe_customer')
 		end,
 		f_loss_conditions = function(eQuest)
-			if not eQuest:QuestNPCIsValid('friend', 'customer') then
+			if not eQuest:QuestNPCIsAlive('friend', 'customer') then
 				if SERVER then
 					eQuest:NextStep('failed')
 				end
-			elseif not eQuest:QuestNPCIsValid('enemy') then
+			elseif not eQuest:QuestNPCIsAlive('enemy') then
 				if SERVER then
 					eQuest:NextStep('give_box')
 				else
@@ -62,14 +66,17 @@ local quest = {
 				end
 			end
 		end,
-		f_spawn_customer = function(eQuest, pos, isAttack)
+		f_spawn_customer = function(eQuest, pos)
 			if CLIENT then return end
-			if eQuest:QuestNPCIsValid('friend', 'customer') then return end
-			local weapon_class = nil
+			if eQuest:QuestNPCIsAlive('friend', 'customer') then return end
 
-			if isAttack then
-				weapon_class = table.Random({'weapon_pistol', 'weapon_smg1', 'weapon_smg1', 'weapon_shotgun', 'weapon_357'})
-			end
+			local weapon_class = table.Random({
+				'weapon_pistol',
+				'weapon_smg1',
+				'weapon_smg1',
+				'weapon_shotgun',
+				'weapon_357'
+			})
 
 			eQuest:SpawnQuestNPC('npc_citizen', {
 				pos = pos,
@@ -77,7 +84,6 @@ local quest = {
 				type = 'friend',
 				tag = 'customer',
 				afterSpawnExecute = function(_, data)
-					if not isAttack then return end
 					local npc = data.npc
 					eQuest:MoveQuestNpcToPosition(npc:GetPos(), 'enemy')
 				end
@@ -99,11 +105,9 @@ local quest = {
 					item:SetFreeze(true)
 					eQuest:SetArrowVector(item)
 				end,
-				customer = function(eQuest, positions)
-					eQuest:QuestFunction('f_spawn_customer', eQuest, table.Random(positions), true)
-				end,
+				customer = _customer_spawner,
 			},
-			onUseItem = function(eQuest, item)
+			onUseItem = function(eQuest, item, activator, caller, useType, value)
 				if CLIENT then return end
 
 				if eQuest:GetQuestItem('box') == item then
@@ -150,8 +154,9 @@ local quest = {
 						})
 					end
 				end,
+				customer = _customer_spawner,
 			},
-			onQuestNPCKilled = function(eQuest, data, npc, attacker, inflictor)
+			onQuestNPCKilled = function(eQuest, data, attacker, inflictor)
 				eQuest:QuestFunction('f_loss_conditions', eQuest)
 			end,
 		},
@@ -160,7 +165,8 @@ local quest = {
 				if SERVER then return end
 				eQuest:Notify(lang['give_box_title'], lang['give_box_description'])
 			end,
-			onUse = function(eQuest, ent)
+			points = { customer = _customer_spawner },
+			onUse = function(eQuest, ply, ent)
 				if CLIENT then return end
 				local npc = eQuest:GetQuestNpc('friend', 'customer')
 
@@ -168,7 +174,7 @@ local quest = {
 					eQuest:NextStep('complete')
 				end
 			end,
-			onQuestNPCKilled = function(eQuest)
+			onQuestNPCKilled = function(eQuest, data, attacker, inflictor)
 				eQuest:QuestFunction('f_loss_conditions', eQuest)
 			end,
 		},
