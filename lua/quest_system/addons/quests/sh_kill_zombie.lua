@@ -27,7 +27,7 @@ local quest = {
 		start = {
 			triggers = {
 				spawn_zombie_trigger = {
-					construct = function(eQuest, center)
+					onStart = function(eQuest, center)
 						if CLIENT then return end
 						eQuest:SetArrowVector(center)
 					end,
@@ -40,7 +40,7 @@ local quest = {
 			}
 		},
 		spawn = {
-			construct = function(eQuest)
+			onStart = function(eQuest)
 				if SERVER then return end
 				eQuest:Notify(lang['spawn_construct_title'], lang['spawn_construct_description'])
 			end,
@@ -67,7 +67,7 @@ local quest = {
 			end
 		},
 		complete = {
-			construct = function(eQuest)
+			onStart = function(eQuest)
 				if CLIENT then
 					eQuest:Notify(lang['complete_title'], lang['complete_description'])
 					return

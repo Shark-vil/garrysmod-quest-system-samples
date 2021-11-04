@@ -69,7 +69,7 @@ local quest = {
 			end,
 			triggers = {
 				spawn_combines_trigger = {
-					construct = function(eQuest, center)
+					onStart = function(eQuest, center)
 						if CLIENT then return end
 						eQuest:SetArrowVector(center)
 					end,
@@ -91,7 +91,7 @@ local quest = {
 			},
 		},
 		spawn_combines = {
-			construct = function(eQuest)
+			onStart = function(eQuest)
 				if SERVER then return end
 				eQuest:NotifyOnlyRegistred(lang['spawn_combines_title'], lang['spawn_combines_description'])
 			end,
@@ -130,7 +130,7 @@ local quest = {
 			}
 		},
 		complete = {
-			construct = function(eQuest)
+			onStart = function(eQuest)
 				if CLIENT then
 					eQuest:Notify(lang['complete_title'], lang['complete_description'])
 					return

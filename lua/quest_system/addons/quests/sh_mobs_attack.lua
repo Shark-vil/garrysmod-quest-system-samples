@@ -179,7 +179,7 @@ local quest = {
 			structures = {
 				barricades = true
 			},
-			construct = function(eQuest)
+			onStart = function(eQuest)
 				if CLIENT then
 					eQuest:GetPlayer():ConCommand('r_cleardecals')
 					return
@@ -230,7 +230,7 @@ local quest = {
 			}
 		},
 		spawn_mobs_wave_1 = {
-			construct = function(eQuest)
+			onStart = function(eQuest)
 				if CLIENT then
 					eQuest:Notify(lang['spawn_mobs_wave_1_title'], lang['spawn_mobs_wave_1_description'])
 					return
@@ -260,7 +260,7 @@ local quest = {
 			}
 		},
 		delay_spawn_mobs_wave_2 = {
-			construct = function(eQuest)
+			onStart = function(eQuest)
 				if SERVER then
 					eQuest:TimerCreate(function()
 						eQuest:NextStep('spawn_mobs_wave_2')
@@ -289,7 +289,7 @@ local quest = {
 			}
 		},
 		spawn_mobs_wave_2 = {
-			construct = function(eQuest)
+			onStart = function(eQuest)
 				if CLIENT then
 					eQuest:Notify(lang['spawn_mobs_wave_2_title'], lang['spawn_mobs_wave_2_description'])
 					return
@@ -319,7 +319,7 @@ local quest = {
 			}
 		},
 		delay_spawn_mobs_wave_3 = {
-			construct = function(eQuest)
+			onStart = function(eQuest)
 				if SERVER then
 					eQuest:TimerCreate(function()
 						eQuest:NextStep('spawn_mobs_wave_3')
@@ -334,7 +334,7 @@ local quest = {
 			}
 		},
 		spawn_mobs_wave_3 = {
-			construct = function(eQuest)
+			onStart = function(eQuest)
 				if CLIENT then
 					eQuest:Notify(lang['spawn_mobs_wave_3_title'], lang['spawn_mobs_wave_3_description'])
 					return
@@ -364,7 +364,7 @@ local quest = {
 			}
 		},
 		complete = {
-			construct = function(eQuest)
+			onStart = function(eQuest)
 				if CLIENT then
 					eQuest:GetPlayer():ConCommand('r_cleardecals')
 					eQuest:Notify(lang['complete_title'], lang['complete_description'])
@@ -377,7 +377,7 @@ local quest = {
 			end,
 		},
 		failed = {
-			construct = function(eQuest)
+			onStart = function(eQuest)
 				if CLIENT then
 					eQuest:GetPlayer():ConCommand('r_cleardecals')
 					eQuest:Notify(lang['failed_title'], lang['failed_description'])

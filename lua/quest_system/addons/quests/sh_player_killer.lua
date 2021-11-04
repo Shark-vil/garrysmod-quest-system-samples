@@ -65,7 +65,7 @@ local quest = {
 	end,
 	steps = {
 		start = {
-			construct = function(eQuest)
+			onStart = function(eQuest)
 				if SERVER then
 					local target = table.Random(player.GetAllOmit(eQuest:GetPlayer()))
 					eQuest:SetNWEntity('playerTarget', target)
@@ -108,7 +108,7 @@ local quest = {
 			}
 		},
 		complete = {
-			construct = function(eQuest)
+			onStart = function(eQuest)
 				if CLIENT then
 					eQuest:Notify(lang['complete_title'], lang['complete_description'])
 					return

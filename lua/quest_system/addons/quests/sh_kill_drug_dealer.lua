@@ -36,13 +36,13 @@ local quest = {
 	payment = 500,
 	steps = {
 		start = {
-			construct = function(eQuest)
+			onStart = function(eQuest)
 				if CLIENT then return end
 				eQuest:GiveQuestWeapon('weapon_crowbar')
 			end,
 			triggers = {
 				spawn_dealer_trigger = {
-					construct = function(eQuest, center)
+					onStart = function(eQuest, center)
 						if CLIENT then return end
 						eQuest:SetArrowVector(center)
 					end,
@@ -57,7 +57,7 @@ local quest = {
 			structures = {
 				barricades = true
 			},
-			construct = function(eQuest)
+			onStart = function(eQuest)
 				if SERVER then return end
 				eQuest:Notify(lang['spawn_construct_tilte'], lang['spawn_construct_description'])
 			end,
@@ -96,7 +96,7 @@ local quest = {
 			end
 		},
 		complete = {
-			construct = function(eQuest)
+			onStart = function(eQuest)
 				if CLIENT then
 					eQuest:Notify(lang['success_title'], lang['complete'])
 					return
@@ -107,7 +107,7 @@ local quest = {
 			end,
 		},
 		compensation = {
-			construct = function(eQuest)
+			onStart = function(eQuest)
 				if CLIENT then
 					eQuest:Notify(lang['success_title'], lang['compensation'])
 					return
