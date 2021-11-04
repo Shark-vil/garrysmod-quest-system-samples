@@ -41,7 +41,7 @@ local quest = {
 		},
 		spawn = {
 			construct = function(eQuest)
-				if CLIENT then return end
+				if SERVER then return end
 				eQuest:Notify(lang['spawn_construct_title'], lang['spawn_construct_description'])
 			end,
 			points = {
@@ -68,8 +68,11 @@ local quest = {
 		},
 		complete = {
 			construct = function(eQuest)
-				if CLIENT then return end
-				eQuest:Notify(lang['complete_title'], lang['complete_description'])
+				if CLIENT then
+					eQuest:Notify(lang['complete_title'], lang['complete_description'])
+					return
+				end
+
 				eQuest:Reward()
 				eQuest:Complete()
 			end,
