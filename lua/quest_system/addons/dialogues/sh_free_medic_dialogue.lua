@@ -86,7 +86,7 @@ local conversation = {
 	condition = function(ply, npc)
 		if not bgNPC then
 			local actor = bgNPC:GetActor(npc)
-			if actor then return actor:HasTeam('medic') end
+			if actor and actor:HasTeam('medic') then return true end
 		end
 
 		return string.find(npc:GetModel():lower(), '/male_') ~= nil
