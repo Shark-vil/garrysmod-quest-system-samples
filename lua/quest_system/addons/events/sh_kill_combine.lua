@@ -60,7 +60,7 @@ local quest = {
 	},
 	steps = {
 		start = {
-			destruct = function(eQuest)
+			onEnd = function(eQuest)
 				if CLIENT then return end
 				if #eQuest.players == 0 then
 					eQuest:Failed()
