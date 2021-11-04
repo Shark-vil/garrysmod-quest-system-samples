@@ -26,7 +26,6 @@ local conversation = {
 	name = lang['name'],
 	autoParent = true,
 	isBackground = true,
-	isRandomNpc = true,
 	class = 'npc_citizen',
 	steps = {
 		start = {

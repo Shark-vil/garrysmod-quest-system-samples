@@ -80,7 +80,6 @@ local conversation = {
 	id = 'free_medic',
 	name = lang['name'],
 	autoParent = true,
-	isRandomNpc = true,
 	randomNumber = 2,
 	class = 'npc_citizen',
 	condition = function(ply, npc)
