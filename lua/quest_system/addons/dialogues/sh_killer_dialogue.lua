@@ -28,8 +28,12 @@ local conversation = {
 	class = 'npc_citizen',
 	condition = function(ply, npc)
 		if not bgNPC then return false end
+
 		local actor = bgNPC:GetActor(npc)
-		if not actor then return false end
+		if not actor then
+			if not slib.chance(30) then return false end
+			actor = BGN_ACTOR:Instance(npc, 'gangster')
+		end
 
 		return actor:GetType() == 'gangster'
 	end,
