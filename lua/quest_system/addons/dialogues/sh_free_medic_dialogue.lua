@@ -79,8 +79,8 @@ local lang = slib.language({
 local conversation = {
 	id = 'free_medic',
 	name = lang['name'],
-	autoParent = true,
-	randomNumber = 2,
+	auto_parent = true,
+	parent_chance = 2,
 	class = 'npc_citizen',
 	condition = function(ply, npc)
 		if not bgNPC then

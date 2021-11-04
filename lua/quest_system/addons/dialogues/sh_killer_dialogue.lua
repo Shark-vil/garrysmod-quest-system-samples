@@ -24,7 +24,7 @@ local lang = slib.language({
 local conversation = {
 	id = 'killer',
 	name = lang['name'],
-	autoParent = true,
+	auto_parent = true,
 	class = 'npc_citizen',
 	condition = function(ply, npc)
 		if not bgNPC then return false end
