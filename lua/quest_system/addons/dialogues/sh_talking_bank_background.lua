@@ -25,10 +25,10 @@ local conversation = {
 	id = 'talking_bank',
 	name = lang['name'],
 	auto_parent = true,
-	type = 'overhead',
+	overhead = true,
 	model = 'models/props_junk/PopCan01a.mdl',
 	condition = function(ply, ent)
-		if math.random(0, 10) ~= 0 then return false end
+		if not slib.chance(5) then return false end
 	end,
 	steps = {
 		start = {

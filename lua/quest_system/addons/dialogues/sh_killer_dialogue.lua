@@ -25,6 +25,7 @@ local conversation = {
 	id = 'killer',
 	name = lang['name'],
 	auto_parent = true,
+	parent_chance = 30,
 	class = 'npc_citizen',
 	condition = function(ply, npc)
 		if not bgNPC then return false end
@@ -91,8 +92,7 @@ local conversation = {
 				eDialogue:Stop()
 
 				timer.Simple(1, function()
-					ply.bgn_always_visible = true
-					actor:AddEnemy(ply)
+					actor:AddEnemy(ply, nil, true)
 					actor:SetState('killer')
 				end)
 			end

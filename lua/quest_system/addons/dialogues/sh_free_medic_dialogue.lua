@@ -80,7 +80,7 @@ local conversation = {
 	id = 'free_medic',
 	name = lang['name'],
 	auto_parent = true,
-	parent_chance = 2,
+	parent_chance = 20,
 	class = 'npc_citizen',
 	condition = function(ply, npc)
 		if not bgNPC then
