@@ -25,12 +25,11 @@ local language_data = {
 	}
 }
 
-local lang = slib.language(language_data)
-
 local quest = {
 	id = 'player_killer',
-	title = lang['title'],
-	description = lang['description'],
+	lang = language_data,
+	title = 'title',
+	description = 'description',
 	disableNotify = true,
 	payment = 500,
 	--[[
@@ -74,7 +73,7 @@ local quest = {
 					local text = player_language['start']
 					text = string.Replace(text, '%player%', target:Nick())
 
-					eQuest:Notify(player_language['title'], text)
+					eQuest:Notify('title', text)
 					eQuest:NextStep('kill_player')
 				end
 			end,
@@ -85,12 +84,10 @@ local quest = {
 					local target = eQuest:GetNWEntity('playerTarget')
 					if target == victim then
 						local quester = eQuest:GetPlayer()
-						local player_language = quester:slibLanguage(language_data)
-
 						if quester == attacker then
 							eQuest:NextStep('complete')
 						else
-							eQuest:Notify(player_language['failed_title'], player_language['failed_playerDeath'])
+							eQuest:Notify('failed_title', 'failed_playerDeath')
 							eQuest:Failed()
 						end
 					end
@@ -98,10 +95,7 @@ local quest = {
 				PlayerDisconnected = function(eQuest, ply)
 					local target = eQuest:GetNWEntity('playerTarget')
 					if target == ply then
-						local quester = eQuest:GetPlayer()
-						local player_language = quester:slibLanguage(language_data)
-
-						eQuest:Notify(player_language['failed_title'], player_language['failed_playerDisconnected'])
+						eQuest:Notify('failed_title', 'failed_playerDisconnected')
 						eQuest:Failed()
 					end
 				end,
@@ -110,7 +104,7 @@ local quest = {
 		complete = {
 			onStart = function(eQuest)
 				if CLIENT then
-					eQuest:Notify(lang['complete_title'], lang['complete_description'])
+					eQuest:Notify('complete_title', 'complete_description')
 					return
 				end
 

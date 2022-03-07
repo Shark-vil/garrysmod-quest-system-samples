@@ -27,12 +27,11 @@ local language_data = {
 	}
 }
 
-local lang = slib.language(language_data)
-
 local quest = {
 	id = 'kill_drug_dealer',
-	title = lang['title'],
-	description = lang['description'],
+	lang = language_data,
+	title = 'title',
+	description = 'description',
 	payment = 500,
 	steps = {
 		start = {
@@ -44,7 +43,7 @@ local quest = {
 				spawn_dealer_trigger = {
 					onStart = function(eQuest, center)
 						if CLIENT then return end
-						eQuest:SetArrowVector(center)
+						eQuest:SetArrow(center)
 					end,
 					onEnter = function(eQuest, ent)
 						if CLIENT or ent ~= eQuest:GetPlayer() then return end
@@ -59,22 +58,20 @@ local quest = {
 			},
 			onStart = function(eQuest)
 				if SERVER then return end
-				eQuest:Notify(lang['spawn_construct_tilte'], lang['spawn_construct_description'])
+				eQuest:Notify('spawn_construct_tilte', 'spawn_construct_description')
 			end,
 			points = {
 				spawn_dealer = function(eQuest, positions)
 					if CLIENT then return end
 
 					local npc = eQuest:SpawnQuestNPC('npc_citizen', {
-						pos = table.Random(positions),
+						pos = positions,
 						weapon_class = 'weapon_pistol',
 						type = 'enemy'
 					})
 
-					eQuest:SetArrowVector(npc)
-
-					QuestDialogue:SingleReplic(eQuest:GetPlayer(), npc,
-						lang['spawn_dealer_name'], lang['spawn_dealer_text'], 6)
+					eQuest:SetArrow(npc)
+					QuestDialogue:SingleReplic(eQuest:GetPlayer(), npc, 'spawn_dealer_name', 'spawn_dealer_text', 6)
 				end,
 			},
 			onQuestNPCKilled = function(eQuest, data, attacker, inflictor)
@@ -83,8 +80,7 @@ local quest = {
 				if not eQuest:QuestNPCIsAlive('enemy') then
 					if eQuest:GetPlayer() == attacker then
 						if not eQuest:IsQuestWeapon(attacker:GetActiveWeapon()) then
-							local player_language = eQuest:GetPlayer():slibLanguage(language_data)
-							eQuest:Notify(player_language['failed_title'], player_language['failed_description'])
+							eQuest:Notify('failed_title', 'failed_description')
 							eQuest:Failed()
 						else
 							eQuest:NextStep('complete')
@@ -98,7 +94,7 @@ local quest = {
 		complete = {
 			onStart = function(eQuest)
 				if CLIENT then
-					eQuest:Notify(lang['success_title'], lang['complete'])
+					eQuest:Notify('success_title', 'complete')
 					return
 				end
 
@@ -109,7 +105,7 @@ local quest = {
 		compensation = {
 			onStart = function(eQuest)
 				if CLIENT then
-					eQuest:Notify(lang['success_title'], lang['compensation'])
+					eQuest:Notify('success_title', 'compensation')
 					return
 				end
 

@@ -37,12 +37,11 @@ local language_data = {
 	}
 }
 
-local lang = slib.language(language_data)
-
 local quest = {
 	id = 'mobs_attack',
-	title = lang['title'],
-	description = lang['description'],
+	lang = language_data,
+	title = 'title',
+	description = 'description',
 	condition = function(ply)
 		if QuestSystem:IsExistsQuest('mobs_attack') then
 			-- The check is done on the server, so the language will always return a value - by default
@@ -69,6 +68,7 @@ local quest = {
 		end,
 		f_spawn_zombie = function(eQuest, pos)
 			if CLIENT then return end
+
 			local mob_list = {}
 			local rnd = math.random(0, 11)
 
@@ -88,15 +88,21 @@ local quest = {
 				table.insert(mob_list, 'npc_antlion')
 			end
 
-			local npc = eQuest:SpawnQuestNPC(table.Random(mob_list), {
+			local npc = eQuest:SpawnQuestNPC(mob_list, {
 				pos = pos,
 				type = 'enemy',
-				notViewSpawn = true,
-				notSpawnDistance = 600
+				not_spawn_on_eyes = true,
+				not_spawn_on_eyes_distance = 600
 			})
 
 			npc.lastAttackTime = CurTime() + 15
 			eQuest:MoveQuestNpcToPosition(eQuest:GetPlayer():GetPos(), 'enemy', nil, 'run')
+		end,
+		f_remove_items = function(eQuest)
+			for _, data in ipairs(eQuest.items) do
+				if not IsValid(data.item) then continue end
+				data.item:Remove()
+			end
 		end,
 		f_spawn_zombie_points = function(eQuest, positions, max_spawn, max_mobs)
 			if CLIENT then return end
@@ -111,7 +117,7 @@ local quest = {
 			eQuest:SetVariable('max_mobs', max_mobs)
 
 			for i = 1, max_spawn do
-				eQuest:QuestFunction('f_spawn_zombie', eQuest, table.Random(positions))
+				eQuest:QuestFunction('f_spawn_zombie', eQuest, table.RandomBySeq(positions))
 			end
 		end,
 		f_next_step = function(eQuest, data, next_step_id)
@@ -126,7 +132,7 @@ local quest = {
 				eQuest:NextStep(next_step_id)
 			else
 				if max_mobs - mob_killed > max_spawn then
-					eQuest:QuestFunction('f_spawn_zombie', eQuest, table.Random(positions))
+					eQuest:QuestFunction('f_spawn_zombie', eQuest, table.RandomBySeq(positions))
 				end
 			end
 
@@ -134,43 +140,47 @@ local quest = {
 		end,
 		f_move_player_to_old_position = function(eQuest)
 			if CLIENT then return end
-			local ply = eQuest:GetPlayer()
 
-			if ply:Alive() then
-				local pos = eQuest:GetVariable('player_old_pos')
-				local health = eQuest:GetVariable('player_old_health')
-				local armor = eQuest:GetVariable('player_old_armor')
-				ply:SetPos(pos)
-				ply:SetHealth(health)
-				ply:SetArmor(armor)
-			end
+			local ply = eQuest:GetPlayer()
+			if not IsValid(ply) or not ply:Alive() then return end
+
+			local pos = eQuest:GetVariable('player_old_pos')
+			local health = eQuest:GetVariable('player_old_health')
+			local armor = eQuest:GetVariable('player_old_armor')
+			ply:SetPos(pos)
+			ply:SetHealth(health)
+			ply:SetArmor(armor)
 		end,
 		f_respawn_npc_if_bad_attack = function(eQuest)
 			if CLIENT then return end
 
-			for _, data in pairs(eQuest.npcs) do
-				if IsValid(data.npc) and data.npc.lastAttackTime < CurTime() then
-					local new_pos = eQuest:GetVariable('mob_spawn_positions')
+			local ply = eQuest:GetPlayer()
 
-					if new_pos ~= nil then
-						new_pos = table.Random(new_pos)
-						local ply = eQuest:GetPlayer()
-						if QuestService:PlayerIsViewVector(ply, new_pos) or QuestService:PlayerIsViewVector(ply, data.npc:GetPos()) or ply:GetPos():Distance(data.npc:GetPos()) < 800 then return end
+			for _, data in ipairs(eQuest.npcs) do
+				if not IsValid(data.npc) or data.npc.lastAttackTime > CurTime() then continue end
+
+				local new_pos = eQuest:GetVariable('mob_spawn_positions')
+				if new_pos then
+					new_pos = table.RandomBySeq(new_pos)
+					if QuestService:PlayerIsViewVector(ply, new_pos)
+						or QuestService:PlayerIsViewVector(ply, data.npc:GetPos())
+						or ply:GetPos():DistToSqr(data.npc:GetPos()) < 640000
+					then
+						return
 					end
-
-					data.npc:SetPos(new_pos)
-					data.npc.lastAttackTime = CurTime() + 15
-					eQuest:MoveQuestNpcToPosition(eQuest:GetPlayer():GetPos(), 'enemy', nil, 'run')
 				end
+
+				data.npc:SetPos(new_pos)
+				data.npc.lastAttackTime = CurTime() + 15
+				eQuest:MoveQuestNpcToPosition(eQuest:GetPlayer():GetPos(), 'enemy', nil, 'run')
 			end
 		end,
 		f_take_damage_reset_last_attack = function(eQuest, target, dmginfo)
-			if eQuest:IsQuestPlayer(target) then
-				local attacker = dmginfo:GetAttacker()
+			if not eQuest:IsQuestPlayer(target) then return end
 
-				if attacker:IsNPC() then
-					attacker.lastAttackTime = CurTime() + 15
-				end
+			local attacker = dmginfo:GetAttacker()
+			if attacker:IsNPC() then
+				attacker.lastAttackTime = CurTime() + 15
 			end
 		end
 	},
@@ -189,9 +199,20 @@ local quest = {
 					eQuest:NextStep('spawn_mobs_wave_1')
 				end, 20)
 
-				local weapons = {'weapon_357', 'weapon_pistol', 'weapon_crossbow', 'weapon_crowbar', 'weapon_frag', 'weapon_ar2', 'weapon_rpg', 'weapon_slam', 'weapon_shotgun', 'weapon_smg1',}
+				local give_weapons = {
+					'weapon_357',
+					'weapon_pistol',
+					'weapon_crossbow',
+					'weapon_crowbar',
+					'weapon_frag',
+					'weapon_ar2',
+					'weapon_rpg',
+					'weapon_slam',
+					'weapon_shotgun',
+					'weapon_smg1',
+				}
 
-				for _, class in pairs(weapons) do
+				for _, class in ipairs(give_weapons) do
 					eQuest:GiveQuestWeapon(class)
 				end
 			end,
@@ -202,22 +223,36 @@ local quest = {
 					eQuest:SetVariable('player_old_pos', ply:GetPos())
 					eQuest:SetVariable('player_old_health', ply:Health())
 					eQuest:SetVariable('player_old_armor', ply:Armor())
-					ply:SetPos(table.Random(positions))
+					ply:SetPos(table.RandomBySeq(positions))
 					ply:SetHealth(100)
 					ply:SetArmor(100)
 				end,
 				ammo_spawner_global = function(eQuest, positions)
 					if CLIENT then return end
 
-					local s_ammo = {'item_ammo_357', 'item_ammo_357_large', 'item_ammo_ar2', 'item_ammo_ar2_large', 'item_ammo_ar2_altfire', 'item_ammo_crossbow', 'item_ammo_pistol', 'item_ammo_pistol_large', 'item_rpg_round', 'item_box_buckshot', 'item_ammo_smg1', 'item_ammo_smg1_large', 'item_ammo_smg1_grenade', 'npc_grenade_frag'}
+					local spawned_ammo = {
+						'item_ammo_357',
+						'item_ammo_357_large',
+						'item_ammo_ar2',
+						'item_ammo_ar2_large',
+						'item_ammo_ar2_altfire',
+						'item_ammo_crossbow',
+						'item_ammo_pistol',
+						'item_ammo_pistol_large',
+						'item_rpg_round',
+						'item_box_buckshot',
+						'item_ammo_smg1',
+						'item_ammo_smg1_large',
+						'item_ammo_smg1_grenade',
+						'npc_grenade_frag',
+					}
 
 					for i = 1, #positions do
-						if math.random(0, 100) > 40 then
-							eQuest:SpawnQuestItem(table.Random(s_ammo), {
-								id = 'ammo_' .. i,
-								pos = positions[i],
-							})
-						end
+						if not slib.chance(40) then continue end
+						eQuest:SpawnQuestItem(spawned_ammo, {
+							id = 'ammo_' .. i,
+							pos = positions[i],
+						})
 					end
 				end
 			},
@@ -231,19 +266,12 @@ local quest = {
 		},
 		spawn_mobs_wave_1 = {
 			onStart = function(eQuest)
-				if CLIENT then
-					eQuest:Notify(lang['spawn_mobs_wave_1_title'], lang['spawn_mobs_wave_1_description'])
-					return
-				end
-
-				for _, data in pairs(eQuest.items) do
-					if IsValid(data.item) then
-						data.item:Remove()
-					end
-				end
+				if SERVER then return end
+				eQuest:Notify('spawn_mobs_wave_1_title', 'spawn_mobs_wave_1_description')
 			end,
 			points = {
 				mob_spawners_1 = function(eQuest, positions)
+					eQuest:QuestFunction('f_remove_items', eQuest)
 					eQuest:QuestFunction('f_spawn_zombie_points', eQuest, positions, 10, 10)
 				end,
 			},
@@ -267,7 +295,7 @@ local quest = {
 					end, 20)
 				else
 					eQuest:GetPlayer():ConCommand('r_cleardecals')
-					eQuest:Notify(lang['delay_spawn_mobs_wave_title'], lang['delay_spawn_mobs_wave_description'])
+					eQuest:Notify('delay_spawn_mobs_wave_title', 'delay_spawn_mobs_wave_description')
 				end
 			end,
 			points = {
@@ -275,34 +303,30 @@ local quest = {
 				helpers_spawner = function(eQuest, positions)
 					if CLIENT then return end
 
-					local s_helpers = {'item_healthkit', 'item_healthvial', 'item_battery',}
+					local spawned_helpers = {
+						'item_healthkit',
+						'item_healthvial',
+						'item_battery',
+					}
 
 					for i = 1, #positions do
-						if math.random(0, 100) > 70 then
-							eQuest:SpawnQuestItem(table.Random(s_helpers), {
-								id = 'helper_' .. i,
-								pos = positions[i],
-							})
-						end
+						if not slib.chance(70) then continue end
+						eQuest:SpawnQuestItem(spawned_helpers, {
+							id = 'helper_' .. i,
+							pos = positions[i],
+						})
 					end
 				end,
 			}
 		},
 		spawn_mobs_wave_2 = {
 			onStart = function(eQuest)
-				if CLIENT then
-					eQuest:Notify(lang['spawn_mobs_wave_2_title'], lang['spawn_mobs_wave_2_description'])
-					return
-				end
-
-				for _, data in pairs(eQuest.items) do
-					if IsValid(data.item) then
-						data.item:Remove()
-					end
-				end
+				if SERVER then return end
+				eQuest:Notify('spawn_mobs_wave_2_title', 'spawn_mobs_wave_2_description')
 			end,
 			points = {
 				mob_spawners_1 = function(eQuest, positions)
+					eQuest:QuestFunction('f_remove_items', eQuest)
 					eQuest:QuestFunction('f_spawn_zombie_points', eQuest, positions, 15, 40)
 				end,
 			},
@@ -326,7 +350,7 @@ local quest = {
 					end, 20)
 				else
 					eQuest:GetPlayer():ConCommand('r_cleardecals')
-					eQuest:Notify(lang['delay_spawn_mobs_wave_title'], lang['delay_spawn_mobs_wave_description'])
+					eQuest:Notify('delay_spawn_mobs_wave_title', 'delay_spawn_mobs_wave_description')
 				end
 			end,
 			points = {
@@ -335,19 +359,12 @@ local quest = {
 		},
 		spawn_mobs_wave_3 = {
 			onStart = function(eQuest)
-				if CLIENT then
-					eQuest:Notify(lang['spawn_mobs_wave_3_title'], lang['spawn_mobs_wave_3_description'])
-					return
-				end
-
-				for _, data in pairs(eQuest.items) do
-					if IsValid(data.item) then
-						data.item:Remove()
-					end
-				end
+				if SERVER then return end
+				eQuest:Notify('spawn_mobs_wave_3_title', 'spawn_mobs_wave_3_description')
 			end,
 			points = {
 				mob_spawners_1 = function(eQuest, positions)
+					eQuest:QuestFunction('f_remove_items', eQuest)
 					eQuest:QuestFunction('f_spawn_zombie_points', eQuest, positions, 20, 50)
 				end,
 			},
@@ -367,7 +384,7 @@ local quest = {
 			onStart = function(eQuest)
 				if CLIENT then
 					eQuest:GetPlayer():ConCommand('r_cleardecals')
-					eQuest:Notify(lang['complete_title'], lang['complete_description'])
+					eQuest:Notify('complete_title', 'complete_description')
 					return
 				end
 
@@ -380,7 +397,7 @@ local quest = {
 			onStart = function(eQuest)
 				if CLIENT then
 					eQuest:GetPlayer():ConCommand('r_cleardecals')
-					eQuest:Notify(lang['failed_title'], lang['failed_description'])
+					eQuest:Notify('failed_title', 'failed_description')
 					return
 				end
 

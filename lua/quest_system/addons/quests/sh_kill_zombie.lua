@@ -1,4 +1,4 @@
-local lang = slib.language({
+local language_data = {
 	['default'] = {
 		['title'] = 'Kill zombies',
 		['description'] = 'Find and kill the zombie that bothers the locals. Any weapon can be used.',
@@ -15,12 +15,13 @@ local lang = slib.language({
 		['complete_title'] = 'Завершено',
 		['complete_description'] = 'Спасибо за вашу помощь! Больше это отродье не будет никому мешать.',
 	}
-})
+}
 
 local quest = {
 	id = 'kill_zombie',
-	title = lang['title'],
-	description = lang['description'],
+	lang = language_data,
+	title = 'title',
+	description = 'description',
 	payment = 500,
 	quest_time = 600,
 	steps = {
@@ -29,7 +30,7 @@ local quest = {
 				spawn_zombie_trigger = {
 					onStart = function(eQuest, center)
 						if CLIENT then return end
-						eQuest:SetArrowVector(center)
+						eQuest:SetArrow(center)
 					end,
 					onEnter = function(eQuest, ent)
 						if CLIENT then return end
@@ -42,7 +43,7 @@ local quest = {
 		spawn = {
 			onStart = function(eQuest)
 				if SERVER then return end
-				eQuest:Notify(lang['spawn_construct_title'], lang['spawn_construct_description'])
+				eQuest:Notify('spawn_construct_title', 'spawn_construct_description')
 			end,
 			points = {
 				spawn_zombie = function(eQuest, positions)
@@ -54,11 +55,13 @@ local quest = {
 						index = index + 1
 						if index > 5 and math.random(0, 1) == 1 then continue end
 
-						eQuest:SpawnQuestNPC(table.Random({'npc_zombie', 'npc_headcrab', 'npc_fastzombie'}), {
+						eQuest:SpawnQuestNPC({'npc_zombie', 'npc_headcrab', 'npc_fastzombie'}, {
 							pos = pos,
 							type = 'enemy'
 						})
 					end
+
+					eQuest:SetArrowNPC('enemy')
 				end,
 			},
 			onQuestNPCKilled = function(eQuest, data, attacker, inflictor)
@@ -69,7 +72,7 @@ local quest = {
 		complete = {
 			onStart = function(eQuest)
 				if CLIENT then
-					eQuest:Notify(lang['complete_title'], lang['complete_description'])
+					eQuest:Notify('complete_title', 'complete_description')
 					return
 				end
 

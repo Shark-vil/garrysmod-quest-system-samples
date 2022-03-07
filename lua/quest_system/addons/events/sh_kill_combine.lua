@@ -71,7 +71,7 @@ local quest = {
 				spawn_combines_trigger = {
 					onStart = function(eQuest, center)
 						if CLIENT then return end
-						eQuest:SetArrowVector(center)
+						eQuest:SetArrow(center)
 					end,
 					onEnter = function(eQuest, ply)
 						if CLIENT or not ply:IsPlayer() then return end
@@ -118,6 +118,7 @@ local quest = {
 						})
 					end
 
+					eQuest:SetArrowNPC('enemy')
 					eQuest:MoveEnemyToRandomPlayer()
 				end,
 			},

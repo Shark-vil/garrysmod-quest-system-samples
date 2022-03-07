@@ -31,23 +31,22 @@ local language_data = {
 	}
 }
 
-local lang = slib.language(language_data)
-
 local _customer_spawner = function(eQuest, positions)
 	eQuest:QuestFunction('f_spawn_customer', eQuest, table.Random(positions))
 end
 
 local quest = {
 	id = 'search_box',
-	title = lang['title'],
-	description = lang['description'],
+	lang = language_data,
+	title = 'title',
+	description = 'description',
 	payment = 500,
 	npc_ignore_other_players = false,
 	functions = {
 		f_spawn_enemy_npcs = function(eQuest, ent)
 			if ent ~= eQuest:GetPlayer() then return end
 			if CLIENT then
-				eQuest:Notify(lang['spawn_enemy_title'], lang['spawn_enemy_description'])
+				eQuest:Notify('spawn_enemy_title', 'spawn_enemy_description')
 				return
 			end
 
@@ -62,7 +61,7 @@ local quest = {
 				if SERVER then
 					eQuest:NextStep('give_box')
 				else
-					eQuest:Notify(lang['complete_title'], lang['loss_description'])
+					eQuest:Notify('complete_title', 'loss_description')
 				end
 			end
 		end,
@@ -70,20 +69,19 @@ local quest = {
 			if CLIENT then return end
 			if eQuest:QuestNPCIsAlive('friend', 'customer') then return end
 
-			local weapon_class = table.Random({
-				'weapon_pistol',
-				'weapon_smg1',
-				'weapon_smg1',
-				'weapon_shotgun',
-				'weapon_357'
-			})
-
 			eQuest:SpawnQuestNPC('npc_citizen', {
 				pos = pos,
-				weapon_class = weapon_class,
+				weapon_class = {
+					'weapon_pistol',
+					'weapon_smg1',
+					'weapon_smg1',
+					'weapon_shotgun',
+					'weapon_357'
+				},
 				type = 'friend',
 				tag = 'customer',
-				afterSpawnExecute = function(_, data)
+				health = '*2',
+				onSpawn = function(_, data)
 					local npc = data.npc
 					eQuest:MoveQuestNpcToPosition(npc:GetPos(), 'enemy')
 				end
@@ -99,11 +97,11 @@ local quest = {
 					local item = eQuest:SpawnQuestItem('quest_item', {
 						id = 'box',
 						model = 'models/props_junk/cardboard_box004a.mdl',
-						pos = table.Random(positions),
+						pos = positions,
 						ang = AngleRand()
 					})
-					item:SetFreeze(true)
-					eQuest:SetArrowVector(item)
+					-- item:SetFreeze(true)
+					eQuest:SetArrow(item)
 				end,
 				customer = _customer_spawner,
 			},
@@ -114,9 +112,9 @@ local quest = {
 					item:FadeRemove()
 
 					local customer = eQuest:GetQuestNpc('friend', 'customer')
-					eQuest:SetArrowVector(customer)
+					eQuest:SetArrow(customer)
 
-					if math.random(0, 1) == 1 then
+					if slib.chance(50) then
 						eQuest:SetVariable('is_customer_attack', true)
 						eQuest:NextStep('attack_on_the_customer')
 					else
@@ -126,9 +124,9 @@ local quest = {
 			end,
 		},
 		attack_on_the_customer = {
-			construct = function(eQuest)
+			onStart = function(eQuest)
 				if SERVER then return end
-				eQuest:Notify(lang['attack_on_the_customer_title'], lang['attack_on_the_customer_description'])
+				eQuest:Notify('attack_on_the_customer_title', 'attack_on_the_customer_description')
 			end,
 			triggers = {
 				spawn_enemy_trigger_on_enter = {
@@ -146,7 +144,7 @@ local quest = {
 				enemy = function(eQuest, positions)
 					if CLIENT then return end
 
-					for _, pos in pairs(positions) do
+					for _, pos in ipairs(positions) do
 						eQuest:SpawnQuestNPC('npc_combine_s', {
 							pos = pos,
 							weapon_class = 'weapon_ar2',
@@ -161,9 +159,9 @@ local quest = {
 			end,
 		},
 		give_box = {
-			construct = function(eQuest)
+			onStart = function(eQuest)
 				if SERVER then return end
-				eQuest:Notify(lang['give_box_title'], lang['give_box_description'])
+				eQuest:Notify('give_box_title', 'give_box_description')
 			end,
 			points = { customer = _customer_spawner },
 			onUse = function(eQuest, ply, ent)
@@ -179,11 +177,9 @@ local quest = {
 			end,
 		},
 		complete = {
-			construct = function(eQuest)
-				if CLIENT then
-					eQuest:Notify(lang['complete_title'], lang['complete_description'])
-					return
-				end
+			onStart = function(eQuest)
+				if CLIENT then return end
+				eQuest:Notify('complete_title', 'complete_description')
 
 				if eQuest:GetVariable('is_customer_attack') then
 					eQuest:Reward(nil, 500)
@@ -196,12 +192,9 @@ local quest = {
 			end,
 		},
 		failed = {
-			construct = function(eQuest)
-				if CLIENT then
-					eQuest:Notify(lang['failed_title'], lang['failed_description'])
-					return
-				end
-
+			onStart = function(eQuest)
+				if CLIENT then return end
+				eQuest:Notify('failed_title', 'failed_description')
 				eQuest:Failed()
 				eQuest:DisableArrowVector()
 			end,

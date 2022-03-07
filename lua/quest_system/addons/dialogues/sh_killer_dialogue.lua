@@ -34,6 +34,7 @@ local conversation = {
 		if not actor then
 			if not slib.chance(30) then return false end
 			actor = BGN_ACTOR:Instance(npc, 'gangster')
+			actor.eternal = true
 		end
 
 		return actor:GetType() == 'gangster'
