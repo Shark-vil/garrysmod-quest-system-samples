@@ -28,14 +28,10 @@ local conversation = {
 	parent_chance = 30,
 	class = 'npc_citizen',
 	condition = function(ply, npc)
-		if not bgNPC then return false end
+		if not bgNPC or not GetConVar('bgn_enable'):GetBool() then return false end
 
 		local actor = bgNPC:GetActor(npc)
-		if not actor then
-			if not slib.chance(30) then return false end
-			actor = BGN_ACTOR:Instance(npc, 'gangster')
-			actor.eternal = true
-		end
+		if not actor or slib.chance(50) then return false end
 
 		return actor:GetType() == 'gangster'
 	end,
