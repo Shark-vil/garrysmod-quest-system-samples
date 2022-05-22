@@ -69,19 +69,18 @@ local quest = {
 			end,
 			triggers = {
 				spawn_combines_trigger = {
-					onStart = function(eQuest, center)
-						if CLIENT then return end
+					onStartServer = function(eQuest, center)
 						eQuest:SetArrow(center)
 					end,
-					onEnter = function(eQuest, ply)
-						if CLIENT or not ply:IsPlayer() then return end
+					onEnterServer = function(eQuest, ply)
+						if not ply:IsPlayer() then return end
 						eQuest:AddPlayer(ply)
 
 						local player_language = ply:slibLanguage(language_data)
 						ply:QuestNotify(player_language['enter_zone_title'], player_language['enter_zone_description'])
 					end,
-					onExit = function(eQuest, ply)
-						if CLIENT or not eQuest:HasQuester(ply) then return end
+					onExitServer = function(eQuest, ply)
+						if not eQuest:HasQuester(ply) then return end
 						eQuest:RemovePlayer(ply)
 
 						local player_language = ply:slibLanguage(language_data)
@@ -91,36 +90,35 @@ local quest = {
 			},
 		},
 		spawn_combines = {
-			onStart = function(eQuest)
-				if SERVER then return end
+			onStartServer = function(eQuest)
 				eQuest:NotifyOnlyRegistred(lang['spawn_combines_title'], lang['spawn_combines_description'])
 			end,
 			structures = {
 				barricades = true
 			},
 			points = {
-				spawn_combines = function(eQuest, positions)
-					if CLIENT then return end
-
-					for _, pos in ipairs(positions) do
-						eQuest:SpawnQuestNPC('npc_combine_s', {
-							type = 'enemy',
-							pos = pos,
-							model = table.RandomBySeq({
-								'models/Combine_Soldier.mdl',
-								'models/Combine_Soldier_PrisonGuard.mdl',
-								'models/Combine_Super_Soldier.mdl'
-							}),
-							weapon_class = table.RandomBySeq({
-								'weapon_ar2',
-								'weapon_shotgun'
+				spawnCombines = {
+					onStartServer = function(eQuest, positions)
+						for _, pos in ipairs(positions) do
+							eQuest:SpawnQuestNPC('npc_combine_s', {
+								type = 'enemy',
+								pos = pos,
+								model = {
+									'models/Combine_Soldier.mdl',
+									'models/Combine_Soldier_PrisonGuard.mdl',
+									'models/Combine_Super_Soldier.mdl'
+								},
+								weapon_class = {
+									'weapon_ar2',
+									'weapon_shotgun'
+								}
 							})
-						})
-					end
+						end
 
-					eQuest:SetArrowNPC('enemy')
-					eQuest:MoveEnemyToRandomPlayer()
-				end,
+						eQuest:SetArrowNPC('enemy')
+						eQuest:MoveEnemyToRandomPlayer()
+					end
+				}
 			},
 			hooks = {
 				OnNPCKilled = function(eQuest, npc, attacker, inflictor)
